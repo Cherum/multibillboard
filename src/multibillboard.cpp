@@ -12,128 +12,129 @@
 using namespace std;
 
 MultiBillboard::MultiBillboard(QQuickItem *parent) :
-    QQuickItem3D(parent),
-    firstPaint(true),
-    m_useGeometryShader(false),
-    m_dataSource(0),
-    m_firstVertexBuild(true),
-    bConnectedToOpenGLContextSignal(false),
-    m_texture2D(0)
+	QQuickItem3D(parent),
+	firstPaint(true),
+	m_useGeometryShader(false),
+	m_dataSource(0),
+	m_firstVertexBuild(true),
+	bConnectedToOpenGLContextSignal(false),
+	m_texture2D(0)
 {
-    m_effect = new CustomEffect();
+	m_effect = new CustomEffect();
 }
 
 bool MultiBillboard::hasGeometryShaderSupport(QGLPainter *painter) {
-    if(firstPaint) {
-        const QSurfaceFormat& format = painter->context()->format();
-        qDebug() << "MultiBillboard: OpenGL version " << format.majorVersion() << "." << format.minorVersion();
-        if ( ! (format.majorVersion() > 3 || (format.majorVersion() == 3 && format.minorVersion() >= 3)) )
-        {
-            qDebug("MultiBillboard: Geometry shader requires OpenGL >= 3.3. Falling back to CPU billboards.");
-            m_useGeometryShader = false;
-        } else {
-            m_useGeometryShader = true;
-        }
-        if ( ! (format.majorVersion() > 4 || (format.majorVersion() == 4 && format.minorVersion() >= 0)) )
-        {
-            qDebug("MultiBillboard: Periodic boundary conditions and geometry shader in combination requires OpenGL >= 4.0. Disabling the use of periodic boundary conditions.");
-            setHasPeriodicCopies(false);
-            m_effect->setPeriodicCopiesAllowed(false);
-        }
-        firstPaint = false;
-    }
-    return m_useGeometryShader;
+	if(firstPaint) {
+		const QSurfaceFormat& format = painter->context()->format();
+		qDebug() << "MultiBillboard: OpenGL version " << format.majorVersion() << "." << format.minorVersion();
+		if ( ! (format.majorVersion() > 3 || (format.majorVersion() == 3 && format.minorVersion() >= 3)) )
+		{
+			qDebug("MultiBillboard: Geometry shader requires OpenGL >= 3.3. Falling back to CPU billboards.");
+			m_useGeometryShader = false;
+		} else {
+			m_useGeometryShader = true;
+		}
+		if ( ! (format.majorVersion() > 4 || (format.majorVersion() == 4 && format.minorVersion() >= 0)) )
+		{
+			qDebug("MultiBillboard: Periodic boundary conditions and geometry shader in combination requires OpenGL >= 4.0. Disabling the use of periodic boundary conditions.");
+			setHasPeriodicCopies(false);
+			m_effect->setPeriodicCopiesAllowed(false);
+		}
+		firstPaint = false;
+	}
+	return m_useGeometryShader;
 }
 
 void MultiBillboard::setTexture(const QUrl &value)
 {
-    if(m_texture != value && !value.isEmpty()) {
-        if(m_texture2D) {
-            m_texture2D->cleanupResources();
-        }
-        m_texture2D = new QGLTexture2D(this);
-        m_texture2D->setUrl(value);
-    }
+	if(m_texture != value && !value.isEmpty()) {
+		if(m_texture2D) {
+			m_texture2D->cleanupResources();
+		}
+		m_texture2D = new QGLTexture2D(this);
+		m_texture2D->setUrl(value);
+	}
 }
 
 void MultiBillboard::drawItem(QGLPainter *painter) {
-    if(m_dataSource) {
-        if(hasGeometryShaderSupport(painter)) {
-            drawGeometryShaderBillboards(painter);
-        } else {
-            drawCPUBillboards(painter);
-        }
-    }
+	if(m_dataSource) {
+		if(hasGeometryShaderSupport(painter)) {
+			drawGeometryShaderBillboards(painter);
+		} else {
+			drawCPUBillboards(painter);
+		}
+	}
 }
 
 void MultiBillboard::drawEffectSetup(QGLPainter *painter, bool &viewportBlend, bool &effectBlend)
 {
-    m_effect->setUseGeometryShader(hasGeometryShaderSupport(painter));
-    if(m_texture2D) {
-        m_texture2D->bind();
-    }
-    // Setting our custom effect must be done before passing any data
-    painter->setUserEffect(m_effect);
+	m_effect->setUseGeometryShader(hasGeometryShaderSupport(painter));
+	if(m_texture2D) {
+		m_texture2D->bind();
+	}
+	// Setting our custom effect must be done before passing any data
+	painter->setUserEffect(m_effect);
 }
 
 void MultiBillboard::drawEffectCleanup(QGLPainter *painter, bool &viewportBlend, bool &effectBlend)
 {
-    if(m_texture2D) {
-        // Uncomment this line to waste GPU bandwidth and avoid the segfault at the
-        // end of running your program.
-        // This basically cleans up all resources used by the texture for each drawed
-        // frame. This happens while there is still a GL context, and so avoids
-        // the annoying segfault.
+	if(m_texture2D) {
+		// Uncomment this line to waste GPU bandwidth and avoid the segfault at the
+		// end of running your program.
+		// This basically cleans up all resources used by the texture for each drawed
+		// frame. This happens while there is still a GL context, and so avoids
+		// the annoying segfault.
 //        m_texture2D->cleanupResources();
-    }
-    painter->setStandardEffect(QGL::FlatColor);
-    painter->setColor(Qt::white);
-    painter->glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    if (viewportBlend != effectBlend) {
-        if (effectBlend)
-            glDisable(GL_BLEND);
-        else
-            glEnable(GL_BLEND);
-    }
+	}
+	painter->setStandardEffect(QGL::FlatColor);
+	painter->setColor(Qt::white);
+	painter->glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	if (viewportBlend != effectBlend) {
+		if (effectBlend)
+			glDisable(GL_BLEND);
+		else
+			glEnable(GL_BLEND);
+	}
 }
 
 void MultiBillboard::handleOpenglContextIsAboutToBeDestroyedYeah()
 {
-    m_texture2D->cleanupResources();
+	m_texture2D->cleanupResources();
 }
 
 void MultiBillboard::drawGeometryShaderBillboards(QGLPainter *painter) {
-    if(m_dataSource->dataBundles() == 0 || m_dataSource->dataBundles()->count() == 0) {
-        return;
-    }
+	if(m_dataSource->dataBundles() == 0 || m_dataSource->dataBundles()->count() == 0) {
+		return;
+	}
 
-    painter->clearAttributes();
+	painter->clearAttributes();
 
-    // After the effect has been set, we may start passing data (perhaps the effect resets some painter props?)
+	// After the effect has been set, we may start passing data (perhaps the effect resets some painter props?)
 
-    const QMatrix4x4 &modelViewMatrix = painter->modelViewMatrix();
-    QVector3D right;
-    right.setX(modelViewMatrix(0,0));
-    right.setY(modelViewMatrix(0,1));
-    right.setZ(modelViewMatrix(0,2));
-    QVector3D up;
-    up.setX(modelViewMatrix(1,0));
-    up.setY(modelViewMatrix(1,1));
-    up.setZ(modelViewMatrix(1,2));
-    QVector3D normal(QVector3D::crossProduct(right, up));
-    painter->glDisableVertexAttribArray(GLuint(QGL::Normal));
-    painter->glVertexAttrib3f(GLuint(QGL::Normal), normal.x(), normal.y(), normal.z());
+	const QMatrix4x4 &modelViewMatrix = painter->modelViewMatrix();
+	QVector3D right;
+	right.setX(modelViewMatrix(0,0));
+	right.setY(modelViewMatrix(0,1));
+	right.setZ(modelViewMatrix(0,2));
+	QVector3D up;
+	up.setX(modelViewMatrix(1,0));
+	up.setY(modelViewMatrix(1,1));
+	up.setZ(modelViewMatrix(1,2));
+	QVector3D normal(QVector3D::crossProduct(right, up));
+	painter->glDisableVertexAttribArray(GLuint(QGL::Normal));
+	painter->glVertexAttrib3f(GLuint(QGL::Normal), normal.x(), normal.y(), normal.z());
 
-    for(DataBundle* bundle : *(m_dataSource->dataBundles())) {
-        // Set the rest of the vertex bundle (basically only positions)
-        m_effect->setSize(bundle->size());
-        m_effect->setColor(bundle->color());
-        m_effect->setSystemSize(bundle->systemSize());
-        m_effect->update(painter, QGLPainter::UpdateColor);
-        painter->setVertexBundle(bundle->vertexBundle());
-        painter->draw(QGL::DrawingMode(QGL::Points), bundle->vertexBundle().vertexCount());
-    }
+	foreach(DataBundle* bundle, *(m_dataSource->dataBundles())){
+	//for(DataBundle* bundle : *(m_dataSource->dataBundles())) {
+		// Set the rest of the vertex bundle (basically only positions)
+		m_effect->setSize(bundle->size());
+		m_effect->setColor(bundle->color());
+		m_effect->setSystemSize(bundle->systemSize());
+		m_effect->update(painter, QGLPainter::UpdateColor);
+		painter->setVertexBundle(bundle->vertexBundle());
+		painter->draw(QGL::DrawingMode(QGL::Points), bundle->vertexBundle().vertexCount());
+	}
 }
 
 void MultiBillboard::drawCPUBillboards(QGLPainter *painter) {
@@ -210,10 +211,10 @@ void MultiBillboard::drawCPUBillboards(QGLPainter *painter) {
 
 MultiBillboard::~MultiBillboard()
 {
-    if(m_effect) {
-        delete m_effect;
-    }
-    if(m_texture2D) {
-        delete m_texture2D;
-    }
+	if(m_effect) {
+		delete m_effect;
+	}
+	if(m_texture2D) {
+		delete m_texture2D;
+	}
 }
