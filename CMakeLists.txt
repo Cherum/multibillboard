@@ -1,15 +1,26 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
-project(Multibillboard)
+project(MultiBillboard)
 
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC TRUE)
 
-SET(CMAKE_PREFIX_PATH C:/Qt/5.2.1_msvc2010_opengl/5.2.1/msvc2010_opengl)	
-find_package(Qt5 REQUIRED Core Concurrent Declarative Gui Network OpenGL Script Sql Test Xml XmlPatterns Widgets 3D 3DQuick Qml Quick)
-find_package(OpenGL)
+#SET(CMAKE_PREFIX_PATH C:/Qt/5.2.1_msvc2010_opengl/5.2.1/msvc2010_opengl)	
+#find_package(Qt5 REQUIRED Core Concurrent Declarative Gui Network OpenGL Script Sql Test Xml XmlPatterns Widgets 3D 3DQuick Qml Quick)
+#find_package(OpenGL)
+
+set(QT_PATH C:/Qt/5.2.1_msvc2010_opengl/5.2.1/msvc2010_opengl/include)
 
 INCLUDE_DIRECTORIES(
-	src
+	${QT_PATH}
+	${QT_PATH}/QtCore
+	${QT_PATH}/QtGui
+	#${QT_PATH}/QtDeclarative
+	#${QT_PATH}/QtOpenGL
+	${QT_PATH}/Qt3D 
+	${QT_PATH}/Qt3DQuick 
+	${QT_PATH}/QtQml 
+	${QT_PATH}/QtQuick
 )
 
 set(BILLBOARD_SOURCE
@@ -24,20 +35,8 @@ set(BILLBOARD_SOURCE
 	src/multibillboardmodule.cpp
 	src/multibillboardmodule.h
 )
-add_library(MULTIBILLBOARD_LIBRARY STATIC ${BILLBOARD_SOURCE})
+add_library(MultiBillboard STATIC ${BILLBOARD_SOURCE})
 
-TARGET_LINK_LIBRARIES(MULTIBILLBOARD_LIBRARY
-	Qt5::Declarative
-	Qt5::Script
-	Qt5::Xml
-	Qt5::OpenGL
-	Qt5::Widgets
-	Qt5::Gui
-	Qt5::Core
-	Qt5::3D
-	Qt5::3DQuick
-	Qt5::Qml
-	Qt5::Quick
-	
-	${OPENGL_LIBRARIES}
-)
+#TARGET_LINK_LIBRARIES(MultiBillboard	
+	#${OPENGL_LIBRARIES}
+#)
