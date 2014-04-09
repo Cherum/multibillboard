@@ -1,12 +1,12 @@
 #ifndef DATASOURCE_H
 #define DATASOURCE_H
 
-#include <QArray>
-#include <QVector3D>
-#include <QColor4ub>
+//#include <QArray>
+//#include <QVector3D>
+//#include <QColor4ub>
 #include <QObject>
-#include <QVector2D>
-#include <QGLVertexBundle>
+//#include <QVector2D>
+//#include <QGLVertexBundle>
 #include <iostream>
 
 #include "databundle.h"

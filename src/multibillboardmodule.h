@@ -3,8 +3,8 @@
 
 #include <QQmlExtensionPlugin>
 #include <QtQml>
-#include <multibillboard.h>
-#include <datasource.h>
+#include <src/multibillboard.h>
+#include <src/datasource.h>
 
 class MultiBillboardModule : public QQmlExtensionPlugin
 {
